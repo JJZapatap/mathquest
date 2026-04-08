@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math Quest Pro — Aventura Matemática</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-1:#0f172a;
+      --bg-2:#172554;
+      --bg-3:#1e293b;
+      --panel:#14213d;
+      --card:#162447;
+      --gold:#fbbf24;
+      --pink:#f472b6;
+      --blue:#60a5fa;
+      --green:#4ade80;
+      --purple:#c084fc;
+      --teal:#2dd4bf;
+      --red:#f87171;
+      --orange:#fb923c;
+      --white:#eef6ff;
+      --muted:#bfd2f0;
+      --shadow:0 18px 45px rgba(0,0,0,.35);
+    }
+
+    *::-webkit-scrollbar{width:10px}
+    *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:999px}
+    *::-webkit-scrollbar-track{background:transparent}
+
+    body{
+      font-family:'Nunito',sans-serif;
+      background:linear-gradient(180deg,var(--bg-1) 0%, var(--bg-2) 58%, var(--bg-3) 100%);
+      color:var(--white);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(96,165,250,.16), transparent 24%),
+        radial-gradient(circle at 85% 12%, rgba(192,132,252,.15), transparent 24%),
+        radial-gradient(circle at 52% 76%, rgba(45,212,191,.09), transparent 26%),
+        radial-gradient(circle at 24% 86%, rgba(251,191,36,.07), transparent 18%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .screen{display:none;position:relative;z-index:1}
+    .screen.active{display:flex}
+    .hidden{display:none!important}
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:12px 24px;
+      font-weight:900;
+      font-size:15px;
+      cursor:pointer;
+      transition:.25s ease;
+      font-family:'Nunito',sans-serif;
+      letter-spacing:.2px;
+    }
+    .btn:hover{transform:translateY(-2px)}
+    .btn-primary{background:linear-gradient(135deg,var(--teal),var(--blue));color:#fff;box-shadow:0 10px 22px rgba(96,165,250,.25)}
+    .btn-secondary{background:rgba(255,255,255,.08);color:var(--white);border:1px solid rgba(255,255,255,.08)}
+    .btn-danger{background:rgba(248,113,113,.15);color:#fecaca;border:1px solid rgba(248,113,113,.25)}
+
+    .chip-toggle{
+      padding:10px 16px;
+      border-radius:999px;
+      border:2px solid transparent;
+      background:rgba(255,255,255,.05);
+      color:var(--white);
+      cursor:pointer;
+      font-weight:900;
+      transition:.2s ease;
+    }
+    .chip-toggle.active{border-color:var(--gold);background:rgba(251,191,36,.13);color:#fff}
+
+    #intro{
+      min-height:100vh;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      text-align:center;
+      padding:30px 20px;
+      gap:16px;
+    }
+    .hero-icon{font-size:92px;filter:drop-shadow(0 12px 28px rgba(0,0,0,.35));animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    .logo{font-family:'Fredoka One',cursive;font-size:58px;line-height:1;background:linear-gradient(135deg,var(--gold),var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .tagline{max-width:820px;font-size:18px;color:var(--muted);line-height:1.7}
+    .mini-note{font-size:13px;color:var(--muted)}
+
+    .config-panel{
+      width:min(980px,100%);
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
+      margin-top:10px;
+    }
+    .glass{
+      background:rgba(20,33,61,.94);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      text-align:left;
+    }
+    .glass h3{font-family:'Fredoka One',cursive;font-size:22px;color:var(--gold);margin-bottom:12px}
+    .glass p{color:var(--muted);line-height:1.7}
+    .input-group{margin-top:12px}
+    .input-group label{display:block;font-weight:800;margin-bottom:8px;color:#dbeafe}
+    .input{
+      width:100%;padding:13px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.05);color:var(--white);font-size:15px;outline:none;
+    }
+    .difficulty-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+
+    .world-cards{
+      display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:14px;max-width:1120px
+    }
+    .world-card{
+      width:300px;background:rgba(20,33,61,.95);border:2px solid transparent;border-radius:28px;padding:24px 22px;
+      position:relative;overflow:hidden;cursor:pointer;transition:.28s ease;box-shadow:var(--shadow);text-align:left
+    }
+    .world-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--c1),var(--c2));opacity:.12}
+    .world-card:hover{transform:translateY(-7px);border-color:var(--c1)}
+    .world-card>*{position:relative;z-index:1}
+    .world-card.selected{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 0 0 3px rgba(251,191,36,.14), var(--shadow)}
+    .world-icon{font-size:52px;margin-bottom:8px}
+    .world-title{font-family:'Fredoka One',cursive;font-size:24px}
+    .world-desc{margin-top:8px;color:var(--muted);line-height:1.65;font-size:14px}
+    .world-badge{display:inline-block;margin-top:14px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px;font-weight:900;letter-spacing:.4px}
+    .world-1{--c1:#fbbf24;--c2:#f472b6}.world-2{--c1:#2dd4bf;--c2:#60a5fa}.world-3{--c1:#c084fc;--c2:#fb923c}
+
+    #rankingScreen{
+      min-height:100vh;align-items:center;justify-content:center;flex-direction:column;padding:28px 18px;gap:18px
+    }
+    .ranking-box{width:min(980px,100%);background:rgba(20,33,61,.95);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:24px;box-shadow:var(--shadow)}
+    .ranking-title{font-family:'Fredoka One',cursive;font-size:34px;text-align:center;margin-bottom:16px;color:var(--gold)}
+    .ranking-table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:18px}
+    .ranking-table th,.ranking-table td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;font-size:14px}
+    .ranking-table th{color:var(--gold);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+    .ranking-table td{color:#e5eefc}
+    .ranking-empty{color:var(--muted);text-align:center;padding:18px}
+
+    #lesson{min-height:100vh;align-items:center;justify-content:center;flex-direction:column;padding:28px 18px;gap:18px;text-align:center}
+    .lesson-icon{font-size:72px;animation:float 2.8s ease-in-out infinite}
+    .lesson-title{font-family:'Fredoka One',cursive;font-size:38px}
+    .lesson-box{width:min(920px,100%);background:rgba(20,33,61,.96);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:30px;box-shadow:var(--shadow);text-align:left}
+    .lesson-box p{line-height:1.85;color:#d7e2f5}.lesson-highlight{margin:18px 0;background:rgba(255,255,255,.05);border-left:4px solid var(--gold);border-radius:14px;padding:16px 18px}
+    .concept-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:18px}
+    .concept-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:15px}
+    .concept-card h4{margin-bottom:6px;color:var(--gold)}.concept-card p{font-size:14px;color:var(--muted)}
+
+    #game{min-height:100vh;flex-direction:column;padding:18px;width:min(1220px,100%);margin:0 auto}
+    .game-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+    .level-title{font-family:'Fredoka One',cursive;font-size:24px;color:var(--gold);margin-bottom:8px}
+    .progress-wrap{width:240px;height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .progress-bar{height:100%;width:12%;border-radius:999px;background:linear-gradient(90deg,var(--pink),var(--gold));transition:width .35s ease}
+    .hud{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .badge{background:rgba(20,33,61,.96);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:9px 16px;font-weight:900;box-shadow:var(--shadow)}
+    .timer-box{min-width:180px;background:rgba(20,33,61,.96);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:10px 12px;box-shadow:var(--shadow)}
+    .timer-header{display:flex;justify-content:space-between;align-items:center;font-weight:900;color:var(--white);font-size:14px;margin-bottom:8px}
+    .timer-track{height:10px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
+    .timer-fill{height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));transition:width .95s linear}
+    .timer-text{font-weight:900;color:var(--gold)}
+
+    .game-layout{display:grid;grid-template-columns:1.12fr .88fr;gap:18px;align-items:start}
+    .panel{background:rgba(20,33,61,.96);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:20px;box-shadow:var(--shadow)}
+    .mission-title{font-family:'Fredoka One',cursive;color:var(--teal);font-size:18px;margin-bottom:10px}
+    .mission-sub{color:var(--muted);font-size:14px;line-height:1.75}
+    .problem-box{margin-top:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px;min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:30px;font-weight:900;line-height:1.6;color:#f8fbff}
+    .visual-zone{margin-top:16px;border-radius:18px;padding:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);min-height:175px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .visual-wrap{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;width:100%}
+    .token-row,.bar-row,.shape-row,.balance-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+    .token{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#082032;background:linear-gradient(135deg,#fde68a,#fbbf24);box-shadow:0 8px 18px rgba(251,191,36,.25);animation:pulseSoft 1.8s ease-in-out infinite}
+    .token.blue{background:linear-gradient(135deg,#bfdbfe,#60a5fa);box-shadow:0 8px 18px rgba(96,165,250,.25)}
+    .token.green{background:linear-gradient(135deg,#bbf7d0,#4ade80);box-shadow:0 8px 18px rgba(74,222,128,.25)}
+    .token.pink{background:linear-gradient(135deg,#fecdd3,#f472b6);box-shadow:0 8px 18px rgba(244,114,182,.25)}
+    @keyframes pulseSoft{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+    .op-sign{font-size:34px;font-weight:900;color:var(--gold);margin:0 6px}.visual-note{font-size:14px;color:var(--muted);text-align:center;line-height:1.7}.divider-line{width:100%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent)}
+    .mini-bar{width:34px;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#93c5fd,#2563eb);box-shadow:0 8px 16px rgba(37,99,235,.25)}
+    .bar-label{font-size:12px;color:var(--muted);text-align:center;font-weight:800;margin-top:6px}.bar-item{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:48px;height:120px}
+    .shape{position:relative;display:grid;place-items:center;font-weight:900;color:white;text-shadow:0 2px 8px rgba(0,0,0,.25);animation:floatMini 2.4s ease-in-out infinite}
+    @keyframes floatMini{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .shape.triangle{width:0;height:0;border-left:45px solid transparent;border-right:45px solid transparent;border-bottom:78px solid #60a5fa}.shape.triangle span{position:absolute;top:36px;left:50%;transform:translateX(-50%)}
+    .shape.square{width:88px;height:88px;background:#2dd4bf;border-radius:16px}.shape.pentagon{width:88px;height:88px;background:#f472b6;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)}.shape.hexagon{width:96px;height:88px;background:#fbbf24;clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);color:#4b2f00}
+    .equation-card{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-weight:900;min-width:64px;text-align:center;box-shadow:0 10px 20px rgba(0,0,0,.18)}
+    .equation-card.x{background:linear-gradient(135deg,#d8b4fe,#a855f7)}.equation-card.n{background:linear-gradient(135deg,#bfdbfe,#60a5fa);color:#082032}.equation-card.ok{background:linear-gradient(135deg,#bbf7d0,#4ade80);color:#082032}
+    .hint-box{margin-top:14px;background:rgba(96,165,250,.10);border-left:4px solid var(--blue);border-radius:14px;padding:12px 14px;color:#bfdbfe;font-size:14px;line-height:1.7}
+    .question-chip{display:inline-flex;align-items:center;gap:8px;font-weight:900;color:var(--gold);margin-bottom:12px;font-size:16px}
+    .options{display:grid;gap:12px;margin-top:10px}
+    .option{background:rgba(255,255,255,.05);border:2px solid transparent;border-radius:18px;padding:16px;cursor:pointer;transition:.2s ease;text-align:left}
+    .option:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.15)}.option.selected{border-color:var(--gold);background:rgba(251,191,36,.12)}.option.correct{border-color:var(--green);background:rgba(74,222,128,.15)}.option.wrong{border-color:var(--red);background:rgba(248,113,113,.14)}
+    .option-title{font-weight:900;font-size:16px;margin-bottom:4px}.option-desc{font-size:14px;color:var(--muted);line-height:1.6}
+    .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .side-card{margin-top:14px;background:rgba(255,255,255,.05);border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,.06)}
+    .side-card h4{color:var(--pink);margin-bottom:8px}.side-card p{color:var(--muted);line-height:1.7;font-size:14px}
+
+    .feedback{position:fixed;inset:0;background:rgba(7,10,22,.58);display:none;align-items:center;justify-content:center;padding:20px;z-index:99}
+    .feedback.show{display:flex}
+    .feedback-card{width:min(540px,100%);background:#182042;border:2px solid rgba(255,255,255,.08);border-radius:26px;padding:30px;text-align:center;box-shadow:0 28px 70px rgba(0,0,0,.45)}
+    .fb-icon{font-size:64px;margin-bottom:10px}.fb-title{font-family:'Fredoka One',cursive;font-size:32px;margin-bottom:8px}.fb-msg{color:var(--muted);line-height:1.8;margin-bottom:18px}.fb-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+    .confetti-piece{position:fixed;width:10px;height:10px;border-radius:2px;animation:fall 1.8s ease-in forwards;pointer-events:none;z-index:120}
+    @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(680deg);opacity:0}}
+    .math-bubble{position:fixed;font-weight:900;color:rgba(255,255,255,.12);animation:mathFloat 16s linear infinite;pointer-events:none;z-index:0;user-select:none}
+    @keyframes mathFloat{from{transform:translateY(110vh) rotate(0deg);opacity:0}15%{opacity:1}85%{opacity:1}to{transform:translateY(-15vh) rotate(360deg);opacity:0}}
+
+    @media(max-width:980px){.config-panel,.game-layout{grid-template-columns:1fr}.logo{font-size:52px}.lesson-title{font-size:32px}}
+    @media(max-width:560px){.hero-icon{font-size:78px}.logo{font-size:42px}.world-card{width:100%}.problem-box{font-size:24px}.timer-box{width:100%}.game-header{align-items:stretch}.hud{width:100%}}
+  </style>
+</head>
+<body>
+  <section id="intro" class="screen active">
+    <div class="hero-icon">🧠⚡📐</div>
+    <div class="logo">Math Quest Pro</div>
+    <p class="tagline">
+      Aventura matemática con selección de dificultad, preguntas aleatorias, temporizador, sonidos simulados y tabla de posiciones.
+      Diseñada para que los estudiantes aprendan jugando en el aula.
+    </p>
+    <p class="mini-note">Configura tu partida, elige un mundo y compite por el mejor puntaje.</p>
+
+    <div class="config-panel">
+      <div class="glass">
+        <h3>Configuración del jugador</h3>
+        <p>Ingresa tu nombre y selecciona el nivel de dificultad. La dificultad cambia el tiempo disponible y el puntaje ganado por respuesta correcta.</p>
+        <div class="input-group">
+          <label for="playerName">Nombre del jugador</label>
+          <input id="playerName" class="input" type="text" maxlength="24" placeholder="Escribe tu nombre" />
+        </div>
+        <div class="input-group">
+          <label>Dificultad</label>
+          <div class="difficulty-row" id="difficultyRow">
+            <button class="chip-toggle active" data-difficulty="easy" onclick="setDifficulty('easy')">Fácil</button>
+            <button class="chip-toggle" data-difficulty="medium" onclick="setDifficulty('medium')">Media</button>
+            <button class="chip-toggle" data-difficulty="hard" onclick="setDifficulty('hard')">Difícil</button>
+          </div>
+        </div>
+        <div class="input-group" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn btn-secondary" onclick="showRanking()">🏆 Ver tabla de posiciones</button>
+          <button class="btn btn-secondary" onclick="toggleSound()" id="soundBtn">🔊 Sonido ON</button>
+        </div>
+      </div>
+
+      <div class="glass">
+        <h3>Reglas rápidas</h3>
+        <p><strong>Fácil:</strong> más tiempo, menos presión. <br><strong>Media:</strong> reto equilibrado. <br><strong>Difícil:</strong> menos tiempo, mayor recompensa.</p>
+        <div class="concept-grid">
+          <div class="concept-card"><h4>⏱️ Tiempo</h4><p id="difficultyTimeText">20 segundos por nivel.</p></div>
+          <div class="concept-card"><h4>⭐ Puntaje</h4><p id="difficultyScoreText">100 puntos por acierto.</p></div>
+          <div class="concept-card"><h4>🎲 Aleatoriedad</h4><p>En cada partida las preguntas cambian dentro del banco del mundo.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="world-cards">
+      <article class="world-card world-1" onclick="selectWorld(1)">
+        <div class="world-icon">📊</div>
+        <div class="world-title" style="color:#fbbf24">Mundo 1</div>
+        <div class="world-desc">Estadística visual con promedio, moda, frecuencia y comparación de datos en barras y fichas.</div>
+        <div class="world-badge" style="color:#fbbf24">ESTADÍSTICA</div>
+      </article>
+
+      <article class="world-card world-2" onclick="selectWorld(2)">
+        <div class="world-icon">➗</div>
+        <div class="world-title" style="color:#2dd4bf">Mundo 2</div>
+        <div class="world-desc">Ecuaciones con apoyo visual, operaciones inversas y razonamiento algebraico paso a paso.</div>
+        <div class="world-badge" style="color:#2dd4bf">ECUACIONES</div>
+      </article>
+
+      <article class="world-card world-3" onclick="selectWorld(3)">
+        <div class="world-icon">📐</div>
+        <div class="world-title" style="color:#fb923c">Mundo 3</div>
+        <div class="world-desc">Polígonos, número de lados, clasificación y reconocimiento de figuras geométricas.</div>
+        <div class="world-badge" style="color:#fb923c">POLÍGONOS</div>
+      </article>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <button class="btn btn-primary" onclick="continueSelectedWorld()">🚀 Ir al mundo seleccionado</button>
+    </div>
+    <p class="mini-note">⭐ Gana puntos · ❤️ Tienes 3 vidas · ⏱️ El tiempo depende de la dificultad.</p>
+  </section>
+
+  <section id="rankingScreen" class="screen">
+    <div class="ranking-box">
+      <div class="ranking-title">🏆 Tabla de posiciones</div>
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jugador</th>
+            <th>Puntaje</th>
+            <th>Dificultad</th>
+            <th>Mundo</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody"></tbody>
+      </table>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px">
+        <button class="btn btn-secondary" onclick="clearRanking()">🗑️ Limpiar ranking</button>
+        <button class="btn btn-primary" onclick="showIntro()">⬅️ Volver</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="lesson" class="screen">
+    <div class="lesson-icon" id="lessonIcon">📊</div>
+    <div class="lesson-title" id="lessonTitle">Título de la lección</div>
+    <div class="lesson-box">
+      <p id="lessonText"></p>
+      <div class="lesson-highlight" id="lessonHighlight"></div>
+      <div class="concept-grid" id="lessonConcepts"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-primary" onclick="startGame()">¡Comenzar misión! →</button>
+      <button class="btn btn-secondary" onclick="showIntro()">Volver</button>
+    </div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="game-header">
+      <div>
+        <div class="level-title" id="levelLabel">Mundo 1 — Nivel 1</div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+
+      <div class="hud">
+        <div class="badge">👤 <span id="playerDisplay">Jugador</span></div>
+        <div class="badge">🎯 <span id="difficultyDisplay">Fácil</span></div>
+        <div class="badge">⭐ <span id="scoreDisplay">0</span> pts</div>
+        <div class="badge" id="livesDisplay">❤️❤️❤️</div>
+        <div class="timer-box">
+          <div class="timer-header">
+            <span>⏱️ Tiempo</span>
+            <span class="timer-text" id="timerText">20 s</span>
+          </div>
+          <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+        </div>
+        <button class="btn btn-secondary" onclick="toggleSound()">🔊/🔇 Sonido</button>
+        <button class="btn btn-secondary" onclick="showIntro()">🏠 Inicio</button>
+      </div>
+    </div>
+
+    <div class="game-layout">
+      <div class="panel">
+        <div class="mission-title">🧩 Reto matemático</div>
+        <p class="mission-sub" id="missionText"></p>
+        <div class="problem-box" id="problemBox"></div>
+        <div class="visual-zone" id="visualZone"></div>
+        <div class="hint-box" id="hintBox"></div>
+      </div>
+
+      <div class="panel">
+        <div class="question-chip">🧠 <span id="questionText">Pregunta</span></div>
+        <div class="options" id="optionsBox"></div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="checkAnswer()">Responder</button>
+          <button class="btn btn-danger" onclick="clearSelection()">Limpiar</button>
+        </div>
+
+        <div class="side-card">
+          <h4>✍️ Recuerda</h4>
+          <p id="rememberText">Observa primero la representación visual, luego resuelve y responde.</p>
+        </div>
+
+        <div class="side-card">
+          <h4>🎲 Banco aleatorio</h4>
+          <p id="bankInfo">En esta partida se seleccionaron preguntas aleatorias del mundo actual.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="feedback" id="feedback">
+    <div class="feedback-card">
+      <div class="fb-icon" id="fbIcon">🎉</div>
+      <div class="fb-title" id="fbTitle">¡Excelente!</div>
+      <div class="fb-msg" id="fbMsg">Mensaje</div>
+      <div class="fb-actions">
+        <button class="btn btn-primary" id="nextBtn" onclick="nextLevel()">Siguiente nivel</button>
+        <button class="btn btn-secondary" onclick="retryLevel()">Reintentar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MAX_LIVES = 3;
+    const QUESTIONS_PER_RUN = 3;
+    const DIFFICULTY = {
+      easy:{ label:'Fácil', time:20, points:100 },
+      medium:{ label:'Media', time:15, points:150 },
+      hard:{ label:'Difícil', time:10, points:220 }
+    };
+
+    const WORLDS = {
+      1: {
+        name: 'Estadística visual',
+        lesson: {
+          icon: '📊',
+          title: 'Estadística con apoyo visual',
+          text: 'La estadística básica permite organizar, comparar e interpretar datos. Aquí trabajarás promedio, moda, frecuencia y lectura de representaciones simples.',
+          highlight: '<strong>Idea clave:</strong> el promedio se calcula sumando y dividiendo, la moda es el dato que más se repite y un gráfico permite comparar cantidades rápidamente.',
+          concepts: [
+            {title:'Promedio', desc:'Suma todos los datos y divide entre la cantidad.'},
+            {title:'Moda', desc:'Es el valor que más se repite.'},
+            {title:'Frecuencia', desc:'Indica cuántas veces aparece un dato.'}
+          ]
+        },
+        bank: [
+          { mission:'Calcula el promedio del conjunto.', problem:'4, 6, 8', hint:'Suma y divide entre 3.', question:'¿Cuál es el promedio?', visual:{type:'tokens-groups', groups:[4,6,8], colors:['gold','blue','green'], op:'÷ 3'}, options:[{title:'6',desc:'Es el resultado correcto.'},{title:'18',desc:'Es la suma total.'},{title:'5',desc:'No coincide.'},{title:'7',desc:'Es cercano, pero incorrecto.'}], correct:0, explanation:'El promedio es 6 porque 4 + 6 + 8 = 18 y 18 ÷ 3 = 6.' },
+          { mission:'Encuentra la moda.', problem:'2, 3, 3, 5, 7', hint:'Busca el dato que más se repite.', question:'¿Cuál es la moda?', visual:{type:'tokens-inline', values:[2,3,3,5,7], highlightValue:3}, options:[{title:'2',desc:'Solo aparece una vez.'},{title:'3',desc:'Es el más repetido.'},{title:'5',desc:'No se repite.'},{title:'7',desc:'No es la moda.'}], correct:1, explanation:'La moda es 3 porque es el único valor repetido.' },
+          { mission:'Compara el gráfico.', problem:'Ventas: Lunes 5 | Martes 8 | Miércoles 6', hint:'Observa la barra más alta.', question:'¿Qué día tuvo más ventas?', visual:{type:'bar-chart', labels:['L','M','X'], values:[5,8,6]}, options:[{title:'Lunes',desc:'Tiene 5.'},{title:'Martes',desc:'Tiene la mayor cantidad.'},{title:'Miércoles',desc:'Tiene 6.'},{title:'Todos igual',desc:'Las cantidades son distintas.'}], correct:1, explanation:'Martes es el mayor con 8 ventas.' },
+          { mission:'Observa la frecuencia.', problem:'1, 1, 1, 2, 2, 3', hint:'Cuenta cuántas veces aparece cada número.', question:'¿Qué número tiene mayor frecuencia?', visual:{type:'tokens-inline', values:[1,1,1,2,2,3], highlightValue:1}, options:[{title:'1',desc:'Aparece tres veces.'},{title:'2',desc:'Aparece dos veces.'},{title:'3',desc:'Aparece una sola vez.'},{title:'Todos igual',desc:'No tienen la misma frecuencia.'}], correct:0, explanation:'El 1 tiene mayor frecuencia porque aparece tres veces.' },
+          { mission:'Calcula un promedio sencillo.', problem:'10, 14, 16', hint:'Suma los datos y divide entre 3.', question:'¿Cuál es el promedio?', visual:{type:'tokens-groups', groups:[10,14,16], colors:['gold','blue','green'], compact:true, op:'÷ 3'}, options:[{title:'12',desc:'No corresponde.'},{title:'13',desc:'No es exacto.'},{title:'14',desc:'Es correcto.'},{title:'15',desc:'Es mayor de lo debido.'}], correct:2, explanation:'El promedio es 14 porque 10 + 14 + 16 = 40 y 40 ÷ 3 ≈ 13.33... Espera, eso no coincide.' , fix:true }
+        ]
+      },
+      2: {
+        name: 'Ecuaciones visuales',
+        lesson: {
+          icon: '➗',
+          title: 'Ecuaciones con apoyo visual',
+          text: 'Una ecuación es una igualdad con un valor desconocido. Resolverla significa hallar el valor de la incógnita usando operaciones equivalentes.',
+          highlight: '<strong>Idea clave:</strong> para despejar x debes usar la operación inversa sin romper la igualdad.',
+          concepts: [
+            {title:'Incógnita', desc:'Es el valor que no conocemos.'},
+            {title:'Operación inversa', desc:'Ayuda a aislar la variable.'},
+            {title:'Verificación', desc:'Comprueba si el valor encontrado funciona.'}
+          ]
+        },
+        bank: [
+          { mission:'Despeja la incógnita.', problem:'x + 5 = 12', hint:'Resta 5 a ambos lados.', question:'¿Cuál es x?', visual:{type:'equation-balance', left:['x',5], right:[12]}, options:[{title:'7',desc:'Es la diferencia correcta.'},{title:'5',desc:'No cumple.'},{title:'12',desc:'Es el lado derecho.'},{title:'17',desc:'Es una suma.'}], correct:0, explanation:'x = 7 porque 12 - 5 = 7.' },
+          { mission:'Piensa en una mitad.', problem:'2x = 14', hint:'Divide entre 2.', question:'¿Cuánto vale x?', visual:{type:'equation-double', xs:2, total:14}, options:[{title:'6',desc:'No es la mitad exacta.'},{title:'7',desc:'Es correcto.'},{title:'12',desc:'No satisface.'},{title:'14',desc:'Es el total.'}], correct:1, explanation:'x = 7 porque 14 ÷ 2 = 7.' },
+          { mission:'Aplica la operación contraria.', problem:'x - 4 = 9', hint:'Suma 4 en ambos lados.', question:'¿Cuál es la solución?', visual:{type:'equation-subtract', remove:4, remain:9}, options:[{title:'13',desc:'Es correcta.'},{title:'9',desc:'No es x.'},{title:'5',desc:'No satisface.'},{title:'4',desc:'No funciona.'}], correct:0, explanation:'x = 13 porque 9 + 4 = 13.' },
+          { mission:'Resuelve con suma.', problem:'x + 9 = 15', hint:'Resta 9 al 15.', question:'¿Qué valor toma x?', visual:{type:'equation-balance', left:['x',9], right:[15]}, options:[{title:'24',desc:'Es suma, no despeje.'},{title:'6',desc:'Es correcto.'},{title:'9',desc:'No despeja la igualdad.'},{title:'5',desc:'Es inferior.'}], correct:1, explanation:'x = 6 porque 15 - 9 = 6.' },
+          { mission:'Resuelve con división.', problem:'3x = 18', hint:'Divide 18 entre 3.', question:'¿Cuánto vale x?', visual:{type:'equation-double', xs:3, total:18}, options:[{title:'9',desc:'Sería si fuera 2x.'},{title:'3',desc:'No es suficiente.'},{title:'6',desc:'Es correcto.'},{title:'18',desc:'Es el total.'}], correct:2, explanation:'x = 6 porque 18 ÷ 3 = 6.' }
+        ]
+      },
+      3: {
+        name: 'Polígonos en acción',
+        lesson: {
+          icon: '📐',
+          title: 'Reconocimiento de polígonos',
+          text: 'Los polígonos son figuras planas cerradas formadas por lados rectos. Su nombre se relaciona con la cantidad de lados.',
+          highlight: '<strong>Idea clave:</strong> 3 lados forman un triángulo, 4 un cuadrilátero, 5 un pentágono y 6 un hexágono.',
+          concepts: [
+            {title:'Polígono', desc:'Figura plana cerrada con lados rectos.'},
+            {title:'Lados', desc:'Permiten identificar el nombre.'},
+            {title:'Clasificación', desc:'Depende de la cantidad de lados.'}
+          ]
+        },
+        bank: [
+          { mission:'Observa la figura.', problem:'Figura de 3 lados', hint:'Es la forma más básica.', question:'¿Cómo se llama?', visual:{type:'shape-single', shape:'triangle', label:'3 lados'}, options:[{title:'Triángulo',desc:'Tiene 3 lados.'},{title:'Cuadrado',desc:'Tiene 4 lados.'},{title:'Pentágono',desc:'Tiene 5 lados.'},{title:'Hexágono',desc:'Tiene 6 lados.'}], correct:0, explanation:'Es un triángulo porque tiene 3 lados.' },
+          { mission:'Cuenta los lados.', problem:'Figura de 5 lados', hint:'Recuerda la secuencia de nombres.', question:'¿Cuál es su nombre?', visual:{type:'shape-single', shape:'pentagon', label:'5 lados'}, options:[{title:'Hexágono',desc:'Tiene 6 lados.'},{title:'Pentágono',desc:'Tiene 5 lados.'},{title:'Triángulo',desc:'Tiene 3 lados.'},{title:'Cuadrado',desc:'Tiene 4 lados.'}], correct:1, explanation:'Es un pentágono porque tiene 5 lados.' },
+          { mission:'Identifica la figura.', problem:'Figura de 6 lados iguales', hint:'Piensa en el nombre del polígono de 6 lados.', question:'¿Qué figura es?', visual:{type:'shape-single', shape:'hexagon', label:'6 lados'}, options:[{title:'Pentágono',desc:'Tiene 5 lados.'},{title:'Hexágono',desc:'Tiene 6 lados.'},{title:'Octágono',desc:'Tiene 8 lados.'},{title:'Triángulo',desc:'Tiene 3 lados.'}], correct:1, explanation:'Es un hexágono porque tiene 6 lados.' },
+          { mission:'Reconoce un cuadrilátero.', problem:'Figura de 4 lados iguales', hint:'Tiene 4 lados y 4 ángulos.', question:'¿Cuál es la mejor respuesta?', visual:{type:'shape-single', shape:'square', label:'4 lados'}, options:[{title:'Triángulo',desc:'Tiene 3 lados.'},{title:'Hexágono',desc:'Tiene 6 lados.'},{title:'Cuadrado',desc:'Tiene 4 lados.'},{title:'Pentágono',desc:'Tiene 5 lados.'}], correct:2, explanation:'Es un cuadrado, un polígono de 4 lados.' },
+          { mission:'Relaciona lados con nombre.', problem:'Un polígono tiene 5 lados.', hint:'Va después del cuadrilátero.', question:'¿Cómo se llama?', visual:{type:'shape-single', shape:'pentagon', label:'5 lados'}, options:[{title:'Pentágono',desc:'Es la respuesta correcta.'},{title:'Triángulo',desc:'Tiene 3 lados.'},{title:'Cuadrado',desc:'Tiene 4 lados.'},{title:'Hexágono',desc:'Tiene 6 lados.'}], correct:0, explanation:'Se llama pentágono porque tiene 5 lados.' }
+        ]
+      }
+    };
+
+    // Fix one inconsistent item safely
+    WORLDS[1].bank[4].problem = '9, 12, 15';
+    WORLDS[1].bank[4].visual.groups = [9,12,15];
+    WORLDS[1].bank[4].explanation = 'El promedio es 12 porque 9 + 12 + 15 = 36 y 36 ÷ 3 = 12.';
+    WORLDS[1].bank[4].options = [{title:'11',desc:'No corresponde.'},{title:'12',desc:'Es correcto.'},{title:'13',desc:'Es mayor de lo debido.'},{title:'36',desc:'Es la suma, no el promedio.'}];
+    WORLDS[1].bank[4].correct = 1;
+
+    let currentWorld = 1;
+    let currentLevel = 0;
+    let score = 0;
+    let lives = MAX_LIVES;
+    let selectedOption = null;
+    let timerInterval = null;
+    let timeLeft = DIFFICULTY.easy.time;
+    let soundEnabled = true;
+    let audioCtx = null;
+    let difficulty = 'easy';
+    let currentRunQuestions = [];
+    let playerName = 'Jugador';
+
+    function $(id){ return document.getElementById(id); }
+
+    function show(id){
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      $(id).classList.add('active');
+    }
+
+    function showIntro(){ clearTimer(); hideFeedback(); show('intro'); renderRankingPreview(); }
+
+    function initAudio(){
+      if(!audioCtx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if(AC) audioCtx = new AC();
+      }
+      if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function beep(freq = 440, duration = 0.12, type = 'sine', volume = 0.03){
+      if(!soundEnabled) return;
+      initAudio();
+      if(!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = volume;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function soundCorrect(){ beep(660,0.08,'triangle',0.035); setTimeout(()=>beep(880,0.12,'triangle',0.035),70); setTimeout(()=>beep(1046,0.14,'triangle',0.035),150); }
+    function soundWrong(){ beep(220,0.14,'sawtooth',0.03); setTimeout(()=>beep(160,0.18,'sawtooth',0.03),90); }
+    function soundTick(){ beep(520,0.03,'square',0.01); }
+    function soundStart(){ beep(500,0.08,'sine',0.025); setTimeout(()=>beep(700,0.08,'sine',0.025),60); }
+    function soundSelect(){ beep(540,0.05,'square',0.018); }
+
+    function toggleSound(){
+      soundEnabled = !soundEnabled;
+      $('soundBtn').textContent = soundEnabled ? '🔊 Sonido ON' : '🔇 Sonido OFF';
+      if(soundEnabled) soundStart();
+    }
+
+    function setDifficulty(mode){
+      difficulty = mode;
+      document.querySelectorAll('[data-difficulty]').forEach(btn => btn.classList.toggle('active', btn.dataset.difficulty === mode));
+      $('difficultyTimeText').textContent = `${DIFFICULTY[mode].time} segundos por nivel.`;
+      $('difficultyScoreText').textContent = `${DIFFICULTY[mode].points} puntos por acierto.`;
+    }
+
+    function selectWorld(worldId){
+      currentWorld = worldId;
+      document.querySelectorAll('.world-card').forEach((card, index) => card.classList.toggle('selected', index === worldId - 1));
+      soundSelect();
+    }
+
+    function continueSelectedWorld(){
+      initPlayer();
+      openLesson(currentWorld);
+    }
+
+    function initPlayer(){
+      const raw = $('playerName').value.trim();
+      playerName = raw || 'Jugador';
+      $('playerDisplay').textContent = playerName;
+      $('difficultyDisplay').textContent = DIFFICULTY[difficulty].label;
+    }
+
+    function openLesson(worldId){
+      currentWorld = worldId;
+      currentLevel = 0;
+      score = 0;
+      lives = MAX_LIVES;
+      selectedOption = null;
+      currentRunQuestions = pickRandomQuestions(WORLDS[worldId].bank, QUESTIONS_PER_RUN);
+      const lesson = WORLDS[worldId].lesson;
+      $('lessonIcon').textContent = lesson.icon;
+      $('lessonTitle').textContent = lesson.title;
+      $('lessonText').textContent = lesson.text;
+      $('lessonHighlight').innerHTML = lesson.highlight;
+      $('lessonConcepts').innerHTML = lesson.concepts.map(c => `<div class="concept-card"><h4>${c.title}</h4><p>${c.desc}</p></div>`).join('');
+      show('lesson');
+    }
+
+    function pickRandomQuestions(bank, count){
+      const pool = [...bank];
+      for(let i = pool.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, Math.min(count, pool.length));
+    }
+
+    function startGame(){ show('game'); soundStart(); loadLevel(); }
+
+    function clearTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval = null; } }
+
+    function updateTimerUI(){
+      $('timerText').textContent = `${timeLeft} s`;
+      $('timerFill').style.width = `${Math.max(0, (timeLeft / DIFFICULTY[difficulty].time) * 100)}%`;
+    }
+
+    function startTimer(){
+      clearTimer();
+      timeLeft = DIFFICULTY[difficulty].time;
+      updateTimerUI();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI();
+        if(timeLeft <= 5 && timeLeft > 0) soundTick();
+        if(timeLeft <= 0){ clearTimer(); onTimeOut(); }
+      }, 1000);
+    }
+
+    function onTimeOut(){
+      lives--;
+      renderLives();
+      soundWrong();
+      if(lives <= 0){
+        saveScore();
+        showFeedback(false, '⏰ Tiempo agotado', 'Se acabó el tiempo y también tus vidas. Tu puntaje fue guardado en la tabla de posiciones.');
+        setTimeout(() => { resetGameState(); showIntro(); hideFeedback(); }, 2600);
+      } else {
+        showFeedback(false, '⏰ Tiempo agotado', `No respondiste a tiempo. Vidas restantes: ${lives}.`);
+      }
+    }
+
+    function renderLives(){ $('livesDisplay').textContent = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0, MAX_LIVES - lives)); }
+
+    function resetGameState(){ clearTimer(); score = 0; lives = MAX_LIVES; currentLevel = 0; selectedOption = null; currentRunQuestions = []; }
+
+    function loadLevel(){
+      clearTimer();
+      const level = currentRunQuestions[currentLevel];
+      selectedOption = null;
+      $('levelLabel').textContent = `${WORLDS[currentWorld].name} — Nivel ${currentLevel + 1}/${currentRunQuestions.length}`;
+      $('progressBar').style.width = `${((currentLevel + 1) / currentRunQuestions.length) * 100}%`;
+      $('scoreDisplay').textContent = score;
+      $('difficultyDisplay').textContent = DIFFICULTY[difficulty].label;
+      $('playerDisplay').textContent = playerName;
+      renderLives();
+      $('missionText').textContent = level.mission;
+      $('problemBox').textContent = level.problem;
+      $('hintBox').textContent = `💡 Pista: ${level.hint}`;
+      $('questionText').textContent = level.question;
+      $('rememberText').textContent = currentWorld === 1 ? 'Observa datos, frecuencias o barras antes de responder.' : currentWorld === 2 ? 'Usa la operación inversa para despejar.' : 'Cuenta lados o reconoce la forma.';
+      $('bankInfo').textContent = `En esta partida se eligieron ${currentRunQuestions.length} preguntas aleatorias del banco del mundo.`;
+
+      $('optionsBox').innerHTML = '';
+      level.options.forEach((opt, index) => {
+        const article = document.createElement('article');
+        article.className = 'option';
+        article.innerHTML = `<div class="option-title">${opt.title}</div><div class="option-desc">${opt.desc}</div>`;
+        article.onclick = () => selectOption(index);
+        $('optionsBox').appendChild(article);
+      });
+
+      renderVisual(level.visual);
+      startTimer();
+    }
+
+    function renderVisual(visual){
+      const zone = $('visualZone');
+      if(!visual){ zone.innerHTML = '<div class="visual-note">Sin apoyo visual para este nivel.</div>'; return; }
+
+      if(visual.type === 'tokens-groups'){
+        const rows = visual.groups.map((n, i) => {
+          const cls = visual.colors?.[i] || 'gold';
+          const limit = visual.compact ? Math.min(n, 8) : n;
+          const tokens = Array.from({length:limit}).map((_,idx)=>`<div class="token ${cls}">${visual.compact ? '' : idx+1}</div>`).join('');
+          const extra = visual.compact && n > 8 ? `<div class="token ${cls}">+${n-8}</div>` : '';
+          return `<div class="token-row">${tokens}${extra}</div>`;
+        }).join('<div class="divider-line"></div>');
+        zone.innerHTML = `<div class="visual-wrap">${rows}<div class="visual-note">Suma todas las fichas y luego ${visual.op}.</div></div>`;
+        return;
+      }
+
+      if(visual.type === 'tokens-inline'){
+        zone.innerHTML = `<div class="visual-wrap"><div class="token-row">${visual.values.map(v => `<div class="token ${v===visual.highlightValue?'pink':'blue'}">${v}</div>`).join('')}</div><div class="visual-note">Observa qué valor aparece más veces.</div></div>`;
+        return;
+      }
+
+      if(visual.type === 'bar-chart'){
+        const max = Math.max(...visual.values);
+        zone.innerHTML = `<div class="visual-wrap"><div class="bar-row">${visual.values.map((v,i)=>`<div class="bar-item"><div class="mini-bar" style="height:${(v/max)*90 + 22}px"></div><div class="bar-label">${visual.labels[i]} (${v})</div></div>`).join('')}</div><div class="visual-note">Compara la barra más alta.</div></div>`;
+        return;
+      }
+
+      if(visual.type === 'equation-balance'){
+        zone.innerHTML = `<div class="visual-wrap"><div class="balance-row"><div class="equation-card x">x</div><div class="op-sign">+</div><div class="equation-card n">${visual.left[1]}</div><div class="op-sign">=</div><div class="equation-card ok">${visual.right[0]}</div></div><div class="visual-note">Piensa cuánto falta para que x más ${visual.left[1]} llegue a ${visual.right[0]}.</div></div>`;
+        return;
+      }
+
+      if(visual.type === 'equation-double'){
+        zone.innerHTML = `<div class="visual-wrap"><div class="balance-row">${Array.from({length:visual.xs}).map(()=>`<div class="equation-card x">x</div>`).join('')}<div class="op-sign">=</div><div class="equation-card ok">${visual.total}</div></div><div class="visual-note">Si ${visual.xs} fichas x equivalen a ${visual.total}, divide el total.</div></div>`;
+        return;
+      }
+
+      if(visual.type === 'equation-subtract'){
+        zone.innerHTML = `<div class="visual-wrap"><div class="balance-row"><div class="equation-card x">x</div><div class="op-sign">-</div><div class="equation-card n">${visual.remove}</div><div class="op-sign">=</div><div class="equation-card ok">${visual.remain}</div></div><div class="visual-note">Devuelve los ${visual.remove} retirados para recuperar x.</div></div>`;
+        return;
+      }
+
+      if(visual.type === 'shape-single'){
+        zone.innerHTML = `<div class="visual-wrap"><div class="shape-row"><div class="shape ${visual.shape}"><span>${visual.label}</span></div></div><div class="visual-note">Relaciona el número de lados con el nombre de la figura.</div></div>`;
+        return;
+      }
+
+      zone.innerHTML = '<div class="visual-note">Representación visual no disponible.</div>';
+    }
+
+    function selectOption(index){
+      selectedOption = index;
+      soundSelect();
+      document.querySelectorAll('.option').forEach((el, i) => el.classList.toggle('selected', i === index));
+    }
+
+    function clearSelection(){
+      selectedOption = null;
+      document.querySelectorAll('.option').forEach(el => el.classList.remove('selected','correct','wrong'));
+    }
+
+    function checkAnswer(){
+      const level = currentRunQuestions[currentLevel];
+      if(selectedOption === null){ showFeedback(false, '🤔 Elige una opción', 'Primero debes seleccionar una respuesta para continuar.'); return; }
+      clearTimer();
+      const options = document.querySelectorAll('.option');
+      options.forEach((el, i) => {
+        el.classList.remove('correct','wrong');
+        if(i === level.correct) el.classList.add('correct');
+        if(i === selectedOption && i !== level.correct) el.classList.add('wrong');
+      });
+
+      if(selectedOption === level.correct){
+        score += DIFFICULTY[difficulty].points;
+        $('scoreDisplay').textContent = score;
+        soundCorrect();
+        spawnConfetti();
+        const isLast = currentLevel === currentRunQuestions.length - 1;
+        if(isLast) saveScore();
+        showFeedback(true, isLast ? '🏆 ¡Mundo completado!' : '🎉 ¡Correcto!', `${level.explanation}${isLast ? ' Tu puntaje fue guardado en la tabla de posiciones.' : ' Continúa al siguiente nivel.'}`, isLast);
+      } else {
+        lives--;
+        renderLives();
+        soundWrong();
+        if(lives <= 0){
+          saveScore();
+          showFeedback(false, '💀 Juego terminado', `${level.explanation} Te quedaste sin vidas. Tu puntaje fue guardado en la tabla de posiciones.`);
+          setTimeout(() => { resetGameState(); showIntro(); hideFeedback(); }, 2600);
+        } else {
+          showFeedback(false, '❌ Respuesta incorrecta', `${level.explanation} Vidas restantes: ${lives}.`);
+        }
+      }
+    }
+
+    function nextLevel(){
+      hideFeedback();
+      currentLevel++;
+      if(currentLevel >= currentRunQuestions.length){ clearTimer(); showIntro(); return; }
+      loadLevel();
+    }
+
+    function retryLevel(){ hideFeedback(); loadLevel(); }
+
+    function showFeedback(success, title, message, worldEnd = false){
+      $('feedback').classList.add('show');
+      $('fbIcon').textContent = success ? (worldEnd ? '🏆' : '🎉') : '📘';
+      $('fbTitle').textContent = title;
+      $('fbMsg').textContent = message;
+      const nextBtn = $('nextBtn');
+      if(success && worldEnd){
+        nextBtn.textContent = 'Ir al inicio';
+        nextBtn.onclick = () => { hideFeedback(); clearTimer(); showIntro(); };
+      } else {
+        nextBtn.textContent = success ? 'Siguiente nivel' : 'Intentar de nuevo';
+        nextBtn.onclick = success ? nextLevel : retryLevel;
+      }
+    }
+
+    function hideFeedback(){ $('feedback').classList.remove('show'); $('nextBtn').onclick = nextLevel; }
+
+    function getRanking(){
+      try { return JSON.parse(localStorage.getItem('mathQuestRanking') || '[]'); }
+      catch { return []; }
+    }
+
+    function saveScore(){
+      const entry = {
+        player: playerName,
+        score,
+        difficulty: DIFFICULTY[difficulty].label,
+        world: WORLDS[currentWorld].name,
+        date: new Date().toLocaleDateString('es-CO')
+      };
+      const ranking = getRanking();
+      ranking.push(entry);
+      ranking.sort((a,b) => b.score - a.score);
+      localStorage.setItem('mathQuestRanking', JSON.stringify(ranking.slice(0, 20)));
+    }
+
+    function renderRankingPreview(){ /* no-op reservado */ }
+
+    function showRanking(){
+      const ranking = getRanking();
+      const body = $('rankingBody');
+      body.innerHTML = '';
+      if(!ranking.length){
+        body.innerHTML = `<tr><td colspan="6" class="ranking-empty">Aún no hay puntajes registrados.</td></tr>`;
+      } else {
+        ranking.forEach((item, idx) => {
+          body.innerHTML += `<tr><td>${idx+1}</td><td>${item.player}</td><td>${item.score}</td><td>${item.difficulty}</td><td>${item.world}</td><td>${item.date}</td></tr>`;
+        });
+      }
+      show('rankingScreen');
+    }
+
+    function clearRanking(){
+      localStorage.removeItem('mathQuestRanking');
+      showRanking();
+    }
+
+    function spawnConfetti(){
+      const colors = ['#fbbf24','#f472b6','#60a5fa','#2dd4bf','#c084fc','#4ade80'];
+      for(let i=0; i<60; i++){
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.top = '-20px';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.width = `${6 + Math.random() * 8}px`;
+        piece.style.height = `${6 + Math.random() * 8}px`;
+        piece.style.animationDuration = `${1.3 + Math.random() * 1.0}s`;
+        piece.style.animationDelay = `${Math.random() * .25}s`;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 2400);
+      }
+    }
+
+    function spawnMathBubbles(){
+      const symbols = ['+','−','×','÷','=','π','√','x','y','△','□','⬟','∑'];
+      setInterval(() => {
+        const bubble = document.createElement('div');
+        bubble.className = 'math-bubble';
+        bubble.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        bubble.style.left = `${Math.random() * 96}vw`;
+        bubble.style.fontSize = `${20 + Math.random() * 24}px`;
+        bubble.style.animationDuration = `${10 + Math.random() * 10}s`;
+        document.body.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 20000);
+      }, 900);
+    }
+
+    // init
+    setDifficulty('easy');
+    selectWorld(1);
+    renderLives();
+    updateTimerUI();
+    spawnMathBubbles();
+  </script>
+</body>
+</html>
